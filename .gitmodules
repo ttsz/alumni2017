@@ -1,0 +1,6 @@
+[submodule "service"]
+	path = service
+	url = git@github.com:ttsz/FakeRest.git
+[submodule "devops-demo-app"]
+	path = devops-demo-app
+	url = git@github.com:ttsz/devops-demo-app.git
