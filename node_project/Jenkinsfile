@@ -1,0 +1,85 @@
+pipeline {
+  agent any
+
+  environment {
+    jobName = env.JOB_NAME.replaceFirst('.+/', '')
+    NODE_ENV = "development"
+    NODE_TLS_REJECT_UNAUTHORIZED = "0"
+  }
+
+  options {
+    ansiColor('xterm')
+    timestamps()
+    timeout(20)
+  }
+
+  stages {
+    stage('Init workspace') {
+      steps {
+        echo 'prune and cleanup'
+        sh 'npm --color=always prune'
+        sh 'rm node_modules app/node_modules dist app/dist -rf'
+        sh 'npm --color=always install'
+      }
+    }
+
+    stage('Unit test with Coverage') {
+      steps {
+        wrap([$class: 'Xvfb', 'autoDisplayName': true, 'timeout': 5]) {
+          sh 'npm --color=always run test'
+        }
+      }
+    }
+
+  }
+
+  post {
+    always {
+      publishHTML (
+        target: [
+          allowMissing: true,
+          alwaysLinkToLatestBuild: false,
+          keepAll: true,
+          reportDir: 'reports/unit/renderer/electron',
+          reportFiles: 'index.html',
+          reportName: 'Renderer unit test report'
+        ])
+      publishHTML (
+        target: [
+          allowMissing: true,
+          alwaysLinkToLatestBuild: false,
+          keepAll: true,
+          reportDir: 'reports/unit/renderer-coverage',
+          reportFiles: 'index.html',
+          reportName: 'Renderer coverage report'
+        ])
+      publishHTML (
+        target: [
+          allowMissing: true,
+          alwaysLinkToLatestBuild: false,
+          keepAll: true,
+          reportDir: 'reports/unit/main',
+          reportFiles: 'mochawesome.html',
+          reportName: 'Main unit test report'
+        ])
+      publishHTML (
+        target: [
+          allowMissing: true,
+          alwaysLinkToLatestBuild: false,
+          keepAll: true,
+          reportDir: 'reports/unit/main-coverage',
+          reportFiles: 'index.html',
+          reportName: 'Main coverage report'
+        ])
+      publishHTML (
+        target: [
+          allowMissing: true,
+          alwaysLinkToLatestBuild: false,
+          keepAll: true,
+          reportDir: 'reports/e2e',
+          reportFiles: 'cucumber_report.html',
+          reportName: 'E2E test report'
+        ])
+    }
+
+}
